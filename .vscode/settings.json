@@ -1,5 +1,0 @@
-{
-  "terminal.integrated.env.windows": {
-    "PATH": "C:\\Users\\koi8\\AppData\\Local\\nodejs-24.21.0;${env:PATH}"
-  }
-}
