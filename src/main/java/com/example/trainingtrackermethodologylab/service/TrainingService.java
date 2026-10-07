@@ -16,12 +16,15 @@ public class TrainingService {
     private final AtomicLong idSequence = new AtomicLong(1);
     private final Map<Long, Training> trainings = new LinkedHashMap<>();
 
-    public Training create(String title, boolean required) {
+    public Training create(String title, boolean required, Integer validityPeriodDays) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Training title is required");
         }
+        if (validityPeriodDays != null && validityPeriodDays <= 0) {
+            throw new IllegalArgumentException("Training validity period must be a positive number of days");
+        }
         long id = idSequence.getAndIncrement();
-        Training training = new Training(id, title.trim(), required);
+        Training training = new Training(id, title.trim(), required, validityPeriodDays);
         trainings.put(id, training);
         return training;
     }

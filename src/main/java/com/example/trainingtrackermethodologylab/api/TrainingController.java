@@ -30,7 +30,7 @@ public class TrainingController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
         }
         try {
-            return trainingService.create(request.title(), request.required());
+            return trainingService.create(request.title(), request.required(), request.validityPeriodDays());
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
