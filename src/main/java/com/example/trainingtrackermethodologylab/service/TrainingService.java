@@ -17,11 +17,18 @@ public class TrainingService {
     private final Map<Long, Training> trainings = new LinkedHashMap<>();
 
     public Training create(String title, boolean required) {
+        return create(title, required, null);
+    }
+
+    public Training create(String title, boolean required, Integer validityPeriodDays) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Training title is required");
         }
+        if (validityPeriodDays != null && validityPeriodDays <= 0) {
+            throw new IllegalArgumentException("Training validityPeriodDays must be a positive integer");
+        }
         long id = idSequence.getAndIncrement();
-        Training training = new Training(id, title.trim(), required);
+        Training training = new Training(id, title.trim(), required, validityPeriodDays);
         trainings.put(id, training);
         return training;
     }

@@ -61,6 +61,12 @@ public class TrainingRecordController {
     // Keep boolean "completed" in API responses for backward compatibility with existing clients.
     private TrainingRecordResponse toResponse(TrainingRecord record) {
         boolean completed = record.completedDate() != null && !record.completedDate().isAfter(LocalDate.now());
-        return new TrainingRecordResponse(record.employeeId(), record.trainingId(), record.completedDate(), completed);
+        return new TrainingRecordResponse(
+                record.employeeId(),
+                record.trainingId(),
+                record.completedDate(),
+                completed,
+                trainingRecordService.statusOf(record)
+        );
     }
 }

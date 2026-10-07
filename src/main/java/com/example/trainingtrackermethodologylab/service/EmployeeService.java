@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -36,6 +37,14 @@ public class EmployeeService {
     public List<Employee> list() {
         return employees.values()
                 .stream()
+                .sorted(Comparator.comparing(Employee::id))
+                .toList();
+    }
+
+    public List<Employee> listByIds(Set<Long> employeeIds) {
+        return employees.values()
+                .stream()
+                .filter(employee -> employeeIds.contains(employee.id()))
                 .sorted(Comparator.comparing(Employee::id))
                 .toList();
     }

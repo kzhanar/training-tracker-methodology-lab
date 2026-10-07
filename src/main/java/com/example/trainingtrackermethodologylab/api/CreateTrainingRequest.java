@@ -1,4 +1,4 @@
 package com.example.trainingtrackermethodologylab.api;
 
-public record CreateTrainingRequest(String title, boolean required) {
+public record CreateTrainingRequest(String title, boolean required, Integer validityPeriodDays) {
 }

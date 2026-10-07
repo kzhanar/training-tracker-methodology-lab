@@ -6,6 +6,7 @@ public record TrainingRecordResponse(
         Long employeeId,
         Long trainingId,
         LocalDate completedDate,
-        boolean completed
+        boolean completed,
+        String status
 ) {
 }
