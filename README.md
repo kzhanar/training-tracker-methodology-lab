@@ -17,11 +17,14 @@ This project intentionally keeps architecture and dependencies minimal.
 ## Baseline Domain Model
 
 - `Employee` (`id`, `name`, `email`)
-- `Training` (`id`, `title`, `required`)
+- `Training` (`id`, `title`, `required`, optional `validityPeriodDays`)
 - `TrainingRecord` (`employeeId`, `trainingId`, `completedDate`)
 
 The model is intentionally simple and in-memory only.
-No expiration logic, validity windows, or status workflow is included yet.
+Courses without `validityPeriodDays` do not expire. For courses with a validity
+period, the completion is valid through `completedDate + validityPeriodDays`.
+The status is `EXPIRED` on the day after that date and `EXPIRING_SOON` when the
+last valid date is within 30 days.
 
 ## Project Structure
 
@@ -59,6 +62,8 @@ mvn test
 - `GET /trainings` - list training courses
 - `POST /employees/{employeeId}/training/{trainingId}/complete` - assign/complete training for employee
 - `GET /employees/{employeeId}/training` - list employee training records
+- `GET /employees/{employeeId}/training/status` - list employee training records with status and expiration date
+- `GET /employees/expired-training` - list employees with expired required training
 
 Create employee payload example:
 
@@ -74,9 +79,15 @@ Create training payload example:
 ```json
 {
   "title": "Secure Coding Basics",
-  "required": true
+  "required": true,
+  "validityPeriodDays": 365
 }
 ```
+
+The `validityPeriodDays` property is optional and must be a positive integer.
+The status endpoint reports `CURRENT`, `EXPIRING_SOON`, or `EXPIRED` and
+includes `expiresOn` when a course has a validity period. The existing
+`GET /employees/{employeeId}/training` response is unchanged.
 
 Complete training payload example:
 

@@ -2,6 +2,7 @@ package com.example.trainingtrackermethodologylab.api;
 
 import com.example.trainingtrackermethodologylab.model.Employee;
 import com.example.trainingtrackermethodologylab.service.EmployeeService;
+import com.example.trainingtrackermethodologylab.service.TrainingStatusService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,9 +19,11 @@ import java.util.List;
 public class EmployeeController {
 
     private final EmployeeService employeeService;
+    private final TrainingStatusService trainingStatusService;
 
-    public EmployeeController(EmployeeService employeeService) {
+    public EmployeeController(EmployeeService employeeService, TrainingStatusService trainingStatusService) {
         this.employeeService = employeeService;
+        this.trainingStatusService = trainingStatusService;
     }
 
     @PostMapping
@@ -39,5 +42,10 @@ public class EmployeeController {
     @GetMapping
     public List<Employee> list() {
         return employeeService.list();
+    }
+
+    @GetMapping("/expired-training")
+    public List<Employee> listEmployeesWithExpiredRequiredTraining() {
+        return trainingStatusService.listEmployeesWithExpiredRequiredTraining();
     }
 }

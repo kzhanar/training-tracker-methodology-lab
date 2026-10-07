@@ -159,6 +159,137 @@ class BaselineApiTest {
     }
 
     @Test
+    void trainingStatusEndpointReturnsStatusAndExpiry() throws Exception {
+        mockMvc.perform(post("/employees")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "Expired Employee",
+                                  "email": "expired@example.com"
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Annual Security",
+                                  "required": true,
+                                  "validityPeriodDays": 30
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/employees/1/training/1/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "completedDate": "2000-01-01"
+                                }
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/employees/1/training/status"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        [
+                          {
+                            "employeeId": 1,
+                            "trainingId": 1,
+                            "completedDate": "2000-01-01",
+                            "completed": true,
+                            "status": "EXPIRED",
+                            "expiresOn": "2000-01-31"
+                          }
+                        ]
+                        """, true));
+    }
+
+    @Test
+    void trainingStatusEndpointReturnsNotFoundForUnknownEmployee() throws Exception {
+        mockMvc.perform(get("/employees/999/training/status"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void expiredTrainingEndpointReturnsUniqueEmployeesWithExpiredRequiredTraining() throws Exception {
+        for (String employeeJson : new String[]{
+                """
+                        {"name":"Expired","email":"expired@example.com"}
+                        """,
+                """
+                        {"name":"Optional Only","email":"optional@example.com"}
+                        """,
+                """
+                        {"name":"No Completion","email":"missing@example.com"}
+                        """
+        }) {
+            mockMvc.perform(post("/employees")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(employeeJson))
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(post("/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Security","required":true,"validityPeriodDays":30}
+                                """))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Privacy","required":true,"validityPeriodDays":60}
+                                """))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Optional Security","required":false,"validityPeriodDays":30}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/employees/1/training/1/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"completedDate":"2000-01-01"}
+                                """))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/employees/1/training/2/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"completedDate":"2000-01-01"}
+                                """))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/employees/2/training/3/complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"completedDate":"2000-01-01"}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/employees/expired-training"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        [
+                          {
+                            "id": 1,
+                            "name": "Expired",
+                            "email": "expired@example.com"
+                          }
+                        ]
+                        """, true));
+    }
+
+    @Test
+    void expiredTrainingEndpointReturnsEmptyArrayWhenNoEmployeesMatch() throws Exception {
+        mockMvc.perform(get("/employees/expired-training"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]", true));
+    }
+
+    @Test
     void completeTrainingAndListEmployeeRecords() throws Exception {
         mockMvc.perform(post("/employees")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -202,7 +333,9 @@ class BaselineApiTest {
                             "completedDate": "2026-10-07"
                           }
                         ]
-                        """));
+                        """))
+                .andExpect(jsonPath("$[0].status").doesNotExist())
+                .andExpect(jsonPath("$[0].expiresOn").doesNotExist());
     }
 
     @Test

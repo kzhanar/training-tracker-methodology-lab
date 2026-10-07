@@ -1,7 +1,9 @@
 package com.example.trainingtrackermethodologylab.api;
 
 import com.example.trainingtrackermethodologylab.model.TrainingRecord;
+import com.example.trainingtrackermethodologylab.model.TrainingRecordStatus;
 import com.example.trainingtrackermethodologylab.service.TrainingRecordService;
+import com.example.trainingtrackermethodologylab.service.TrainingStatusService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,9 +23,14 @@ import java.util.NoSuchElementException;
 public class TrainingRecordController {
 
     private final TrainingRecordService trainingRecordService;
+    private final TrainingStatusService trainingStatusService;
 
-    public TrainingRecordController(TrainingRecordService trainingRecordService) {
+    public TrainingRecordController(
+            TrainingRecordService trainingRecordService,
+            TrainingStatusService trainingStatusService
+    ) {
         this.trainingRecordService = trainingRecordService;
+        this.trainingStatusService = trainingStatusService;
     }
 
     @PostMapping("/{trainingId}/complete")
@@ -58,9 +65,32 @@ public class TrainingRecordController {
         }
     }
 
+    @GetMapping("/status")
+    public List<TrainingStatusResponse> listEmployeeTrainingStatus(@PathVariable long employeeId) {
+        try {
+            return trainingStatusService.listStatusForEmployee(employeeId)
+                    .stream()
+                    .map(this::toStatusResponse)
+                    .toList();
+        } catch (NoSuchElementException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+        }
+    }
+
     // Keep boolean "completed" in API responses for backward compatibility with existing clients.
     private TrainingRecordResponse toResponse(TrainingRecord record) {
         boolean completed = record.completedDate() != null && !record.completedDate().isAfter(LocalDate.now());
         return new TrainingRecordResponse(record.employeeId(), record.trainingId(), record.completedDate(), completed);
+    }
+
+    private TrainingStatusResponse toStatusResponse(TrainingRecordStatus status) {
+        return new TrainingStatusResponse(
+                status.employeeId(),
+                status.trainingId(),
+                status.completedDate(),
+                status.completed(),
+                status.status(),
+                status.expiresOn()
+        );
     }
 }
