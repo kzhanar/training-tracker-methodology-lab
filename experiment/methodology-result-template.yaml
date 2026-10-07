@@ -1,0 +1,24 @@
+# Use null when a value is unknown or unreported; use 0 only when evidence confirms zero.
+methodology: null
+baseline_commit: null
+final_commit: null
+setup_minutes: null
+planning_minutes: null
+implementation_minutes: null
+total_minutes: null
+approx_input_tokens: null
+approx_output_tokens: null
+ai_interactions: null
+artifacts_created: null
+ambiguities_discovered: null
+production_files_changed: null
+lines_added: null
+lines_deleted: null
+dependencies_added: null
+tests_added: null
+baseline_tests_passed: null
+independent_tests_passed: null
+independent_tests_failed: null
+rework_cycles: null
+review_findings: null
+developer_notes: null
