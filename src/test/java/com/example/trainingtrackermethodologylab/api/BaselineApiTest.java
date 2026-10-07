@@ -79,6 +79,86 @@ class BaselineApiTest {
     }
 
     @Test
+    void optionalValidityPeriodKeepsLegacyCourseResponsesUnchanged() throws Exception {
+        mockMvc.perform(post("/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Legacy Course",
+                                  "required": true
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.validityPeriodDays").doesNotExist());
+
+        mockMvc.perform(post("/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Explicitly Non-Expiring Course",
+                                  "required": false,
+                                  "validityPeriodDays": null
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.validityPeriodDays").doesNotExist());
+
+        mockMvc.perform(get("/trainings"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        [
+                          {
+                            "id": 1,
+                            "title": "Legacy Course",
+                            "required": true
+                          },
+                          {
+                            "id": 2,
+                            "title": "Explicitly Non-Expiring Course",
+                            "required": false
+                          }
+                        ]
+                        """, true));
+    }
+
+    @Test
+    void configuredValidityPeriodIsReturnedForTraining() throws Exception {
+        mockMvc.perform(post("/trainings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Annual Security",
+                                  "required": true,
+                                  "validityPeriodDays": 90
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.validityPeriodDays").value(90));
+
+        mockMvc.perform(get("/trainings"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].validityPeriodDays").value(90));
+    }
+
+    @Test
+    void invalidValidityPeriodsReturnClearErrors() throws Exception {
+        for (String validityPeriod : new String[]{"0", "-1", "1.5", "2147483648"}) {
+            mockMvc.perform(post("/trainings")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "title": "Invalid Period",
+                                      "required": true,
+                                      "validityPeriodDays": %s
+                                    }
+                                    """.formatted(validityPeriod)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.error").value("Training validity period must be a positive integer"));
+        }
+    }
+
+    @Test
     void completeTrainingAndListEmployeeRecords() throws Exception {
         mockMvc.perform(post("/employees")
                         .contentType(MediaType.APPLICATION_JSON)

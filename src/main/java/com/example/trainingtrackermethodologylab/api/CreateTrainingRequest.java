@@ -1,4 +1,6 @@
 package com.example.trainingtrackermethodologylab.api;
 
-public record CreateTrainingRequest(String title, boolean required) {
+import java.math.BigDecimal;
+
+public record CreateTrainingRequest(String title, boolean required, BigDecimal validityPeriodDays) {
 }

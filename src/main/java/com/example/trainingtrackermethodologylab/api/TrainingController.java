@@ -30,7 +30,11 @@ public class TrainingController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request body is required");
         }
         try {
-            return trainingService.create(request.title(), request.required());
+            return trainingService.create(
+                    request.title(),
+                    request.required(),
+                    toValidityPeriodDays(request.validityPeriodDays())
+            );
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
         }
@@ -39,5 +43,16 @@ public class TrainingController {
     @GetMapping
     public List<Training> list() {
         return trainingService.list();
+    }
+
+    private Integer toValidityPeriodDays(java.math.BigDecimal validityPeriodDays) {
+        if (validityPeriodDays == null) {
+            return null;
+        }
+        try {
+            return validityPeriodDays.intValueExact();
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException("Training validity period must be a positive integer", ex);
+        }
     }
 }
